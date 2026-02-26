@@ -1,0 +1,151 @@
+{% extends "banking/base.html" %}
+
+{% block title %}账户总览 - 简易银行系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card gradient-bg">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1">账户总览</h4>
+                    <p class="mb-1 text-light opacity-75">查看所有账户及余额，快速发起交易。</p>
+                    <div class="d-flex flex-wrap gap-3 small mt-2">
+                        <span class="pill px-3 py-1 bg-light text-dark">
+                            总余额：<strong>￥{{ total_balance }}</strong>
+                        </span>
+                        <span class="pill px-3 py-1 bg-light text-dark">
+                            账户数：<strong>{{ account_count }}</strong>
+                        </span>
+                        <span class="pill px-3 py-1 bg-light text-dark">
+                            客户数：<strong>{{ customer_count }}</strong>
+                        </span>
+                    </div>
+                </div>
+                <a href="{% url 'banking:transaction_new' %}" class="btn btn-light text-primary fw-semibold pill">
+                    新建交易
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for account in accounts %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="card-title mb-0">{{ account.customer.full_name }}</h5>
+                        <span class="badge bg-primary pill">
+                            {{ account.get_account_type_display }}
+                        </span>
+                    </div>
+                    <p class="text-muted mb-1 small">账号：{{ account.number }}</p>
+                    <p class="fw-bold fs-5 mb-3 text-success">
+                        ￥{{ account.balance }}
+                    </p>
+                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                        <div class="btn-group">
+                            <a href="{% url 'banking:transaction_new_for_account' account.id %}"
+                               class="btn btn-outline-primary btn-sm pill">
+                                对该账户交易
+                            </a>
+                            <a href="{% url 'banking:statement_upload_for_account' account.id %}"
+                               class="btn btn-outline-secondary btn-sm pill">
+                                上传对账单
+                            </a>
+                        </div>
+                        <span class="text-muted small text-end">
+                            开户时间：{{ account.created_at|date:"Y-m-d" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                暂无账户数据，请先在后台管理中创建客户和账户（`/admin`）。
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<div class="row mt-4 g-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-3">最近交易</h5>
+                {% if recent_transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>账户</th>
+                                <th>类型</th>
+                                <th class="text-end">金额</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for tx in recent_transactions %}
+                                <tr>
+                                    <td class="small">{{ tx.created_at|date:"Y-m-d H:i" }}</td>
+                                    <td class="small">
+                                        {{ tx.account.number }}<br>
+                                        <span class="text-muted">{{ tx.account.customer.full_name }}</span>
+                                    </td>
+                                    <td class="small">{{ tx.get_tx_type_display }}</td>
+                                    <td class="text-end {% if tx.tx_type == tx.DEPOSIT %}text-success{% else %}text-danger{% endif %}">
+                                        ￥{{ tx.amount }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted small mb-0">暂无交易记录。</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-3">最新对账单</h5>
+                {% if recent_statements %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                            <tr>
+                                <th>上传时间</th>
+                                <th>账户</th>
+                                <th>文件名</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for st in recent_statements %}
+                                <tr>
+                                    <td class="small">{{ st.uploaded_at|date:"Y-m-d H:i" }}</td>
+                                    <td class="small">
+                                        {{ st.account.number }}<br>
+                                        <span class="text-muted">{{ st.account.customer.full_name }}</span>
+                                    </td>
+                                    <td class="small">{{ st.original_name }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted small mb-0">尚未上传任何对账单。</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

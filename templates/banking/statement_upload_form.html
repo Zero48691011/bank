@@ -1,0 +1,27 @@
+{% extends "banking/base.html" %}
+
+{% block title %}上传对账单 - 简易银行系统{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-1">上传对账单</h5>
+                <p class="text-muted small mb-3">
+                    请选择账户并上传对应的对账单文件（如 PDF、Excel 等），文件会安全地存储在 Minio 中。
+                </p>
+                <form method="post" enctype="multipart/form-data" class="vstack gap-3">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'banking:dashboard' %}" class="btn btn-outline-secondary pill">返回</a>
+                        <button type="submit" class="btn btn-primary pill">上传</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
