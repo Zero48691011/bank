@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: bank_db
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: bank
+      MYSQL_PASSWORD: bankpass
+    ports:
+      - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  mongo:
+    image: mongo:6.0
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: bank_audit
+    ports:
+      - "27017:27017"
+
+  minio:
+    image: minio/minio:latest
+    restart: always
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  web:
+    build: .
+    restart: always
+    depends_on:
+      - db
+      - mongo
+      - minio
+    environment:
+      MYSQL_DATABASE: bank_db
+      MYSQL_USER: bank
+      MYSQL_PASSWORD: bankpass
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MONGO_DATABASE: bank_audit
+      MONGO_URI: mongodb://mongo:27017
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET_NAME: bank-files
+      MINIO_USE_SSL: "false"
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+
